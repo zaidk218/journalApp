@@ -1,7 +1,7 @@
 package com.zaid.journalApp.controller;
 
-import com.zaid.journalApp.entity.JournalEntry;
-import com.zaid.journalApp.service.JournalEntryService;
+import com.zaid.journalApp.entity.Journal;
+import com.zaid.journalApp.service.JournalService;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -12,102 +12,52 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/journal")
-public class JournalEntryControllerV2 {
+public class JournalController {
 
     @Autowired
-    private JournalEntryService journalEntryService;
+    private JournalService journalService;
 
     @GetMapping
-    public ResponseEntity<List<JournalEntry>> getJournalEntries() {
-        List<JournalEntry> entries = journalEntryService.getAllJournalEntries();
-        if(entries!=null && !entries.isEmpty()){
-            return  ResponseEntity.ok(entries) ;
+    public ResponseEntity<List<Journal>> getJournals() {
+        List<Journal> journals = journalService.getAllJournals();
+        if (journals != null && !journals.isEmpty()) {
+            return ResponseEntity.ok(journals);
         }
         return ResponseEntity.notFound().build();
-
     }
 
     @PostMapping
-    public ResponseEntity<JournalEntry> createJournalEntry(@RequestBody JournalEntry journalEntry) {
-        if (journalEntry == null || journalEntry.getTitle() == null || journalEntry.getContent() == null) {
+    public ResponseEntity<Journal> createJournal(@RequestBody Journal journal) {
+        if (journal == null || journal.getTitle() == null || journal.getContent() == null) {
             return ResponseEntity.badRequest().build(); // 400 Bad Request
         }
-        journalEntry.setDate(new java.util.Date());
-        journalEntryService.saveEntry(journalEntry);
-        return ResponseEntity.status(HttpStatus.CREATED).body(journalEntry); // 201 Created
+        journal.setDate(new java.util.Date());
+        journalService.saveJournal(journal);
+        return ResponseEntity.status(HttpStatus.CREATED).body(journal); // 201 Created
     }
 
     @GetMapping("/id/{myId}")
-    public ResponseEntity<JournalEntry> getJournalEntry(@PathVariable ObjectId myId) {
-        JournalEntry entry = journalEntryService.getJournalEntry(myId);
-        return entry != null ? ResponseEntity.ok(entry) : ResponseEntity.notFound().build(); // 404 Not Found
+    public ResponseEntity<Journal> getJournal(@PathVariable ObjectId myId) {
+        Journal journal = journalService.getJournal(myId);
+        return journal != null ? ResponseEntity.ok(journal) : ResponseEntity.notFound().build(); // 404 Not Found
     }
 
     @DeleteMapping("/id/{myId}")
-    public ResponseEntity<Void> deleteJournalEntry(@PathVariable ObjectId myId) {
-        boolean deleted = journalEntryService.deleteJournalEntry(myId);
+    public ResponseEntity<Void> deleteJournal(@PathVariable ObjectId myId) {
+        boolean deleted = journalService.deleteJournal(myId);
         return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build(); // 204 No Content or 404 Not Found
     }
 
     @PutMapping("/id/{myId}")
-    public ResponseEntity<JournalEntry> updateJournalEntry(@PathVariable ObjectId myId, @RequestBody JournalEntry journalEntry) {
-        if (journalEntry == null || journalEntry.getTitle().equals("") || journalEntry.getContent().equals("")) {
+    public ResponseEntity<Journal> updateJournal(@PathVariable ObjectId myId, @RequestBody Journal journal) {
+        if (journal == null || journal.getTitle().isEmpty() || journal.getContent().isEmpty()) {
             return ResponseEntity.badRequest().build(); // 400 Bad Request
         }
-        journalEntry.setDate(new java.util.Date());
-        JournalEntry updatedEntry = journalEntryService.updateJournalEntry(myId, journalEntry);
-        return updatedEntry != null ? ResponseEntity.ok(updatedEntry) : ResponseEntity.notFound().build(); // 404 Not Found
+        journal.setDate(new java.util.Date());
+        Journal updatedJournal = journalService.updateJournal(myId, journal);
+        return updatedJournal != null ? ResponseEntity.ok(updatedJournal) : ResponseEntity.notFound().build(); // 404 Not Found
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -181,4 +131,4 @@ public class JournalEntryControllerV2 {
 //        journalEntry.setDate(new java.util.Date());
 //        return journalEntryService.updateJournalEntry(myId, journalEntry);
 //    }
-//}
+//} "
