@@ -16,10 +16,14 @@ import java.util.List;
 public class User {
     @Id
     private ObjectId id;
-    @NonNull@Indexed(unique = true)
+
+    @NonNull
+    @Indexed(unique = true)
     private String username;
+
     @NonNull
     private String password;
+
     @DBRef
-    private List<Journal> journals=  new ArrayList<>();
+    private List<Journal> journals = new ArrayList<>();
 }

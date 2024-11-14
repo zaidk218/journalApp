@@ -28,7 +28,7 @@ public class JournalController {
 
     @PostMapping
     public ResponseEntity<Journal> createJournal(@RequestBody Journal journal) {
-        if (journal == null || journal.getTitle() == null || journal.getContent() == null) {
+        if (journal == null || journal.getTitle().isEmpty() || journal.getContent().isEmpty()) {
             return ResponseEntity.badRequest().build(); // 400 Bad Request
         }
         journal.setDate(new java.util.Date());
