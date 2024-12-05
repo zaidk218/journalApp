@@ -34,31 +34,19 @@ public class UserController {
 
     @PutMapping("/username/{username}")
     public ResponseEntity<User> updateUser(@PathVariable String username, @RequestBody User user) {
-        if (user == null || user.getUsername().isEmpty() || user.getPassword().isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
         User updatedUser = userService.updateUser(username, user);
-        if (updatedUser != null) {
-            return new ResponseEntity<>(updatedUser, HttpStatus.OK);
-        }
-        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        return updatedUser != null ? ResponseEntity.ok(updatedUser) : ResponseEntity.notFound().build();
     }
 
     @DeleteMapping("/username/{username}")
     public ResponseEntity<Void> deleteUser(@PathVariable String username) {
         boolean isDeleted = userService.deleteUser(username);
-        if (isDeleted) {
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        }
-        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        return isDeleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
     }
 
     @GetMapping("/username/{username}")
     public ResponseEntity<User> getUser(@PathVariable String username) {
         User user = userService.getUser(username);
-        if (user != null) {
-            return new ResponseEntity<>(user, HttpStatus.OK);
-        }
-        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        return user != null ? ResponseEntity.ok(user) : ResponseEntity.notFound().build();
     }
 }
