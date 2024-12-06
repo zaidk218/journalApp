@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class JournalService {
@@ -22,57 +21,113 @@ public class JournalService {
 
     public List<Journal> getJournalsByUsername(String username) {
         User user = userService.getUser(username);
-        return (user != null) ? user.getJournals() : null;
+        if(user==null){
+            throw new IllegalArgumentException("User not found: " + username);
+        }
+        return journalRepository.findAllById(user.getJournalIds());
+
     }
 
-    public Journal createJournal(Journal journal, String username) {
-        if (journal == null || journal.getTitle().isEmpty() || journal.getContent().isEmpty()) {
-            return null; // Validation failed
+    public Journal createJournal(Journal journal,String username){
+        if(journal==null|| journal.getTitle().isEmpty()||journal.getContent().isEmpty()||journal.getDate()==null){
+            throw new IllegalArgumentException("Invalid Journal data");
         }
 
-        User user = userService.getUser(username);
-        if (user == null) {
-            return null; // User does not exist
+        User user=userService.getUser(username);
+        if(user==null){
+            throw new IllegalArgumentException("User not found: " + username);
         }
 
         journal.setDate(new Date());
         Journal savedJournal = journalRepository.save(journal);
 
-        // Add journal to the user's list
-        user.getJournals().add(savedJournal);
+        user.getJournalIds().add(savedJournal.getId());
         userService.saveEntry(user);
         return savedJournal;
     }
 
-    public Journal getJournal(ObjectId id) {
-        return journalRepository.findById(id).orElse(null);
+    public Journal getJournal(ObjectId journalId){
+        return journalRepository.findById(journalId).orElse(null);
     }
 
-    public boolean deleteJournal(ObjectId id, String username) {
-        User user = userService.getUser(username);
-        if (user != null && journalRepository.existsById(id)) {
-            user.getJournals().removeIf(journal -> journal.getId().equals(id));
-            journalRepository.deleteById(id);
+    public boolean deleteJournal(ObjectId journalId,String username){
+        User user =userService.getUser(username);
+        if(user!=null && journalRepository.existsById(journalId)){
+            user.getJournalIds().remove(journalId);
+            journalRepository.deleteById(journalId);
             userService.saveEntry(user);
             return true;
         }
         return false;
     }
 
-    public Journal updateJournal(ObjectId id, Journal journal, String username) {
-        User user = userService.getUser(username);
-        if (user == null || journal == null || journal.getTitle().isEmpty() || journal.getContent().isEmpty()) {
-            return null; // Validation failed
+    public Journal updateJournal(ObjectId journalId,Journal journal,String username){
+        if(journal==null|| journal.getTitle().isEmpty()||journal.getContent().isEmpty()){
+            throw new IllegalArgumentException("Invalid Journal data");
         }
+        return journalRepository.findById(journalId)
+                .map(existingJournal->{
+                    existingJournal.setTitle(journal.getTitle());
+                    existingJournal.setContent(journal.getContent());
+                    return journalRepository.save(existingJournal);
+                })
+                .orElse(null);
 
-        Optional<Journal> existingJournal = journalRepository.findById(id);
-        if (existingJournal.isPresent()) {
-            Journal entryToUpdate = existingJournal.get();
-            entryToUpdate.setTitle(journal.getTitle());
-            entryToUpdate.setContent(journal.getContent());
-            entryToUpdate.setDate(new Date());
-            return journalRepository.save(entryToUpdate);
         }
-        return null; // Journal not found
     }
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

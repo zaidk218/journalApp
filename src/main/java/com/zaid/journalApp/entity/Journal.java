@@ -4,14 +4,13 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
+import java.util.Date;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.util.Date;
-
-@Document(collection = "journalEntries")
 @Data
+@Document(collection="journalEntries")
 @NoArgsConstructor
-public class Journal {
+public class Journal{
     @Id
     private ObjectId id;
     private String title;
