@@ -5,6 +5,8 @@ import com.zaid.journalApp.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,29 +18,39 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    // getalluser controller hm nhi bnaayenge ,usko hm admin me bna denge ki agar admin dekhna chahta hai saare user.agar admin dekhna chahta hai saare user toh wo dekh skta hai koi ek particular user saare user nhi dekhega...
+//    @GetMapping
+//    public ResponseEntity<List<User>> getAllUsers(){
+//        List<User> users=userService.getAllUsers();
+//        return ResponseEntity.ok(users);
+//    }
 
 
-    @PostMapping
-    public ResponseEntity<User> createUser(@RequestBody User user) {
 
-        User savedUser = userService.saveEntry(user);
-        return ResponseEntity.ok(savedUser);
-    }
+    //putmapping authenticated  user ke liye rhna chahiye..
 
-    @PutMapping("/{username}")
-    public ResponseEntity<User> updateUser(@PathVariable String username, @RequestBody User user) {
+    @PutMapping
+    public ResponseEntity<User> updateUser( @RequestBody User user) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
         User updatedUser = userService.updateUser(username, user);
         return ResponseEntity.status(HttpStatus.OK).body(updatedUser);
     }
+    //deletemapping authenticated  user ke liye rhna chahiye..
 
-    @DeleteMapping("/{username}")
-    public ResponseEntity<Void> deleteUser(@PathVariable String username) {
+    @DeleteMapping
+    public ResponseEntity<Void> deleteUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
         boolean isDeleted = userService.deleteUser(username);
         return isDeleted? ResponseEntity.noContent().build():ResponseEntity.notFound().build();
     }
 
-    @GetMapping("/{username}")
-    public ResponseEntity<User> getUser(@PathVariable String username) {
+
+    @GetMapping
+    public ResponseEntity<User> getUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
         User user = userService.getUser(username);
         return user != null ? ResponseEntity.ok(user) : ResponseEntity.notFound().build();
     }
