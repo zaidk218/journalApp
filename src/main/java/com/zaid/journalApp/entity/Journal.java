@@ -9,7 +9,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 @Data
 @Document(collection="journalEntries")
-@NoArgsConstructor
 public class Journal{
     @Id
     private ObjectId id;

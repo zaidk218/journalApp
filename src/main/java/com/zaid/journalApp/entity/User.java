@@ -26,4 +26,7 @@ public class User{
     // Maintain only IDs for journals for better decoupling
     private List<ObjectId>JournalIds=new ArrayList<>();
 
+    private List<String> roles = new ArrayList<>();
+
+
 }

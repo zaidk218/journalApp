@@ -31,7 +31,7 @@ public class JournalController{
     }
 
     @GetMapping("/{journalId}")
-    public ResponseEntity<Journal> getJournal(@PathVariable ObjectId journalId){
+    public ResponseEntity<Journal> getJournalDyJournalId(@PathVariable ObjectId journalId){
         Journal journal=journalService.getJournal(journalId);
         return journal !=null ? ResponseEntity.ok(journal) :ResponseEntity.notFound().build();
     }
