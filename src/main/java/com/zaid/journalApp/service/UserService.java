@@ -2,6 +2,7 @@ package com.zaid.journalApp.service;
 
 import com.zaid.journalApp.entity.User;
 import com.zaid.journalApp.repository.UserRepository;
+import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -20,19 +21,38 @@ public class UserService {
     private  PasswordEncoder passwordEncoder;
 
     // Add @Transactional to ensure the user save is done in a single transaction
+
+
     @Transactional
-    public User saveEntry(User user) {
-        // Hash the password before saving
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
+    public User saveOrUpdateUser(User user) {
+        // Encode the password only for new users or if explicitly being updated
+        if (user.getId() == null || shouldEncodePassword(user)) {
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+        }
         return userRepository.save(user);
     }
 
-    @Transactional(readOnly = true) // Mark as read-only for optimization when only fetching data
+    private boolean shouldEncodePassword(User user) {
+        User existingUser = userRepository.findByUsername(user.getUsername());
+        return existingUser == null || !passwordEncoder.matches(user.getPassword(), existingUser.getPassword());
+    }
+
+
+    @Transactional
+    public User addJournalToUser(User user) {
+
+
+        // Save only the updated user object (no password modification here)
+        return userRepository.save(user);
+    }
+
+
+    @Transactional(readOnly = true)
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
 
-    @Transactional(readOnly = true) // Mark as read-only for optimization
+    @Transactional(readOnly = true)
     public User getUser(String username) {
         return userRepository.findByUsername(username);
     }
@@ -42,8 +62,16 @@ public class UserService {
     public User updateUser(String username, User user) {
         return Optional.ofNullable(userRepository.findByUsername(username))
                 .map(existingUser -> {
-                    existingUser.setUsername(user.getUsername());
-                    existingUser.setPassword(passwordEncoder.encode(user.getPassword()));
+                    // Only update fields that should be modifiable
+                    if (user.getUsername() != null) {
+                        existingUser.setUsername(user.getUsername());
+                    }
+
+                    // Only update password if a new password is provided
+                    if (user.getPassword() != null && !user.getPassword().isEmpty()) {
+                        existingUser.setPassword(passwordEncoder.encode(user.getPassword()));
+                    }
+
                     return userRepository.save(existingUser);
                 })
                 .orElse(null);

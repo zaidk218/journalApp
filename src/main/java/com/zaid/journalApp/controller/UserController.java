@@ -30,11 +30,18 @@ public class UserController {
     //putmapping authenticated  user ke liye rhna chahiye..
 
     @PutMapping
-    public ResponseEntity<User> updateUser( @RequestBody User user) {
+    public ResponseEntity<User> updateUser(@RequestBody User user) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName();
-        User updatedUser = userService.updateUser(username, user);
-        return ResponseEntity.status(HttpStatus.OK).body(updatedUser);
+        String currentUsername = authentication.getName();
+
+        try {
+            User updatedUser = userService.updateUser(currentUsername, user);
+            return updatedUser != null
+                    ? ResponseEntity.ok(updatedUser)
+                    : ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
     //deletemapping authenticated  user ke liye rhna chahiye..
 
@@ -42,8 +49,11 @@ public class UserController {
     public ResponseEntity<Void> deleteUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
+
         boolean isDeleted = userService.deleteUser(username);
-        return isDeleted? ResponseEntity.noContent().build():ResponseEntity.notFound().build();
+        return isDeleted
+                ? ResponseEntity.noContent().build()
+                : ResponseEntity.notFound().build();
     }
 
 
@@ -51,7 +61,10 @@ public class UserController {
     public ResponseEntity<User> getUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
+
         User user = userService.getUser(username);
-        return user != null ? ResponseEntity.ok(user) : ResponseEntity.notFound().build();
+        return user != null
+                ? ResponseEntity.ok(user)
+                : ResponseEntity.notFound().build();
     }
 }

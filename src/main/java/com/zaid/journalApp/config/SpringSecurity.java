@@ -26,7 +26,7 @@ public class SpringSecurity {
         http
                 .authorizeRequests(authorizeRequests ->
                         authorizeRequests
-                                .requestMatchers("/users/{username}/journals/**","/users/**").authenticated() // Authenticate all journal-related endpoints
+                                .requestMatchers("/journals/**","/users/**").authenticated() // Authenticate all journal-related endpoints
                                 .anyRequest().permitAll()
                 )
                 .httpBasic(Customizer.withDefaults()) // Replaces deprecated `httpBasic()` method
