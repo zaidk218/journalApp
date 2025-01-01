@@ -2,16 +2,20 @@ package com.zaid.journalApp.service;
 
 import com.zaid.journalApp.entity.User;
 import com.zaid.journalApp.repository.UserRepository;
+import lombok.extern.slf4j.Slf4j;
+import lombok.extern.slf4j.XSlf4j;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional; // import @Transactional
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 @Service
+@Slf4j
 public class UserService {
 
     @Autowired
@@ -25,12 +29,50 @@ public class UserService {
 
     @Transactional
     public User saveOrUpdateUser(User user) {
-        // Encode the password only for new users or if explicitly being updated
-        if (user.getId() == null || shouldEncodePassword(user)) {
-            user.setPassword(passwordEncoder.encode(user.getPassword()));
+        log.info("Attempting to save/update user: {}", user.getUsername());
+        try {
+            if (user.getId() == null || shouldEncodePassword(user)) {
+                log.debug("Encoding password for user: {}", user.getUsername());
+                user.setPassword(passwordEncoder.encode(user.getPassword()));
+            }
+
+            if (user.getRoles() != null && !user.getRoles().isEmpty()) {
+                User existingUser = userRepository.findByUsername(user.getUsername());
+                if (existingUser != null) {
+                    log.debug("Merging roles for existing user: {}", user.getUsername());
+                    List<String> updatedRoles = new ArrayList<>(existingUser.getRoles());
+                    for (String role : user.getRoles()) {
+                        if (!updatedRoles.contains(role)) {
+                            updatedRoles.add(role);
+                        }
+                    }
+                    user.setRoles(updatedRoles);
+                }
+            } else {
+                log.debug("Assigning default USER role to: {}", user.getUsername());
+                user.setRoles(List.of("USER"));
+            }
+            User savedUser = userRepository.save(user);
+            log.info("Successfully saved/updated user: {}", user.getUsername());
+            return savedUser;
+        } catch (Exception e) {
+            log.error("Error saving/updating user: {}", user.getUsername(), e);
+            throw e;
         }
-        return userRepository.save(user);
     }
+
+    @Transactional
+    public User saveOrUpdateAdminUser(User user) {
+        log.info("Attempting to save/update admin user: {}", user.getUsername());
+        user.getRoles().add("ADMIN");
+        user.getRoles().add("USER");
+        return saveOrUpdateUser(user);
+    }
+
+
+
+
+    // saveOrUpdateAdminUser
 
     private boolean shouldEncodePassword(User user) {
         User existingUser = userRepository.findByUsername(user.getUsername());
@@ -38,52 +80,56 @@ public class UserService {
     }
 
 
-    @Transactional
-    public User addJournalToUser(User user) {
-
-
-        // Save only the updated user object (no password modification here)
-        return userRepository.save(user);
-    }
-
-
     @Transactional(readOnly = true)
     public List<User> getAllUsers() {
-        return userRepository.findAll();
+        log.info("Fetching all users");
+        List<User> users = userRepository.findAll();
+        log.debug("Retrieved {} users", users.size());
+        return users;
     }
 
     @Transactional(readOnly = true)
     public User getUser(String username) {
+        log.debug("Fetching user by username: {}", username);
         return userRepository.findByUsername(username);
     }
 
     // Add @Transactional for update, ensures that the update is done as a transaction
     @Transactional
     public User updateUser(String username, User user) {
+        log.info("Updating user: {}", username);
         return Optional.ofNullable(userRepository.findByUsername(username))
                 .map(existingUser -> {
-                    // Only update fields that should be modifiable
                     if (user.getUsername() != null) {
+                        log.debug("Updating username from {} to {}", username, user.getUsername());
                         existingUser.setUsername(user.getUsername());
                     }
 
-                    // Only update password if a new password is provided
                     if (user.getPassword() != null && !user.getPassword().isEmpty()) {
+                        log.debug("Updating password for user: {}", username);
                         existingUser.setPassword(passwordEncoder.encode(user.getPassword()));
                     }
 
-                    return userRepository.save(existingUser);
+                    User updatedUser = userRepository.save(existingUser);
+                    log.info("Successfully updated user: {}", username);
+                    return updatedUser;
                 })
-                .orElse(null);
+                .orElseGet(() -> {
+                    log.warn("User not found for update: {}", username);
+                    return null;
+                });
     }
 
     // Add @Transactional to ensure delete operation happens in a transaction
     @Transactional
     public boolean deleteUser(String username) {
+        log.info("Attempting to delete user: {}", username);
         if (userRepository.existsByUsername(username)) {
             userRepository.deleteByUsername(username);
+            log.info("Successfully deleted user: {}", username);
             return true;
         }
+        log.warn("User not found for deletion: {}", username);
         return false;
     }
 }

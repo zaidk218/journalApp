@@ -4,6 +4,7 @@ import com.zaid.journalApp.entity.Journal;
 import com.zaid.journalApp.entity.User;
 import com.zaid.journalApp.repository.JournalRepository;
 import com.zaid.journalApp.repository.UserRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -13,6 +14,7 @@ import java.util.Date;
 import java.util.List;
 
 @Service
+@Slf4j
 public class JournalService
 {
 
@@ -27,34 +29,40 @@ public class JournalService
 
     @Transactional(readOnly = true)
     public List<Journal> getJournalsByUsername(String username) {
+        log.debug("Fetching journals for user: {}", username);
         User user = userService.getUser(username);
         if (user == null) {
+            log.error("User not found while fetching journals: {}", username);
             throw new IllegalArgumentException("User not found: " + username);
         }
-        return journalRepository.findAllById(user.getJournalIds());
+        List<Journal> journals = journalRepository.findAllById(user.getJournalIds());
+        log.debug("Retrieved {} journals for user: {}", journals.size(), username);
+        return journals;
     }
 
     @Transactional
     public Journal createJournal(Journal journal, String username) {
-        // Validate journal input
-        validateJournalInput(journal);
+        log.info("Creating new journal for user: {}", username);
+        try {
+            validateJournalInput(journal);
+            User user = userService.getUser(username);
+            if (user == null) {
+                log.error("User not found while creating journal: {}", username);
+                throw new IllegalArgumentException("User not found: " + username);
+            }
 
-        // Retrieve user
-        User user = userService.getUser(username);
-        if (user == null) {
-            throw new IllegalArgumentException("User not found: " + username);
+            journal.setDate(new Date());
+            Journal savedJournal = journalRepository.save(journal);
+            log.debug("Saved journal with ID: {} for user: {}", savedJournal.getId(), username);
+
+            user.getJournalIds().add(savedJournal.getId());
+            userRepository.save(user);
+            log.info("Successfully created journal for user: {}", username);
+            return savedJournal;
+        } catch (Exception e) {
+            log.error("Error creating journal for user: {}", username, e);
+            throw e;
         }
-
-        // Set journal date and save
-        journal.setDate(new Date());
-        Journal savedJournal = journalRepository.save(journal);
-
-        // Update user's journal list without modifying password
-        user.getJournalIds().add(savedJournal.getId());
-        // Use save method that doesn't trigger password re-encoding
-        userRepository.save(user);
-
-        return savedJournal;
     }
 
     private void validateJournalInput(Journal journal) {
@@ -68,8 +76,10 @@ public class JournalService
 
     @Transactional(readOnly = true)
     public Journal getJournal(ObjectId journalId, String username) {
+        log.debug("Fetching journal {} for user: {}", journalId, username);
         User user = userService.getUser(username);
         if (user == null || !user.getJournalIds().contains(journalId)) {
+            log.error("Unauthorized access or journal not found. JournalId: {}, Username: {}", journalId, username);
             throw new IllegalArgumentException("Journal not found or unauthorized access");
         }
         return journalRepository.findById(journalId).orElse(null);
@@ -77,30 +87,38 @@ public class JournalService
 
     @Transactional
     public boolean deleteJournal(ObjectId journalId, String username) {
+        log.info("Attempting to delete journal {} for user: {}", journalId, username);
         User user = userService.getUser(username);
+
         if (user != null &&
                 journalRepository.existsById(journalId) &&
                 user.getJournalIds().contains(journalId)) {
 
+            log.debug("Journal {} exists and is associated with user: {}", journalId, username);
+
             user.getJournalIds().remove(journalId);
             journalRepository.deleteById(journalId);
+            log.debug("Journal {} deleted successfully for user: {}", journalId, username);
 
             // Save user without re-encoding password
             userRepository.save(user);
+            log.info("User data updated successfully after deleting journal: {}", journalId);
             return true;
         }
+
+        log.warn("Journal deletion failed. Either journal {} does not exist, or user {} is not authorized.", journalId, username);
         return false;
     }
 
+
     @Transactional
     public Journal updateJournal(ObjectId journalId, Journal journal, String username) {
+        log.info("Updating journal {} for user: {}", journalId, username);
         User user = userService.getUser(username);
-
-        // Validate input
         validateJournalInput(journal);
 
-        // Check journal ownership
         if (!user.getJournalIds().contains(journalId)) {
+            log.error("Unauthorized access attempt to update journal. JournalId: {}, Username: {}", journalId, username);
             throw new IllegalArgumentException("Unauthorized journal access");
         }
 
@@ -108,8 +126,13 @@ public class JournalService
                 .map(existingJournal -> {
                     existingJournal.setTitle(journal.getTitle());
                     existingJournal.setContent(journal.getContent());
-                    return journalRepository.save(existingJournal);
+                    Journal updatedJournal = journalRepository.save(existingJournal);
+                    log.info("Successfully updated journal {} for user: {}", journalId, username);
+                    return updatedJournal;
                 })
-                .orElseThrow(() -> new IllegalArgumentException("Journal not found"));
+                .orElseThrow(() -> {
+                    log.error("Journal not found for update. JournalId: {}", journalId);
+                    return new IllegalArgumentException("Journal not found");
+                });
     }
 }

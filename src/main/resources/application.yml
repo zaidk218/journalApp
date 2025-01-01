@@ -1,0 +1,23 @@
+#spring ko jha se jo milega wha se wo le lega ...jo cheez application.properties se milega wo application.properties se le lega aur jo application.yaml se milega wo wha se lelega ...
+#jb conflict aayega toh application.properties ko priority di jayegi
+spring:
+  application:
+    name: JournalApp
+  data:
+    mongodb:
+      uri: mongodb+srv://zaidk9620:zaidk9620@cluster0.pwcln.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+      database: journaldb
+      auto-index-creation: true
+logging:
+  level:
+    org.springframework.security: DEBUG
+    org.springframework.web: DEBUG
+
+
+server:
+  port: 8080
+  servlet:
+    context-path: /api/v1
+
+profiles:
+  active: development
