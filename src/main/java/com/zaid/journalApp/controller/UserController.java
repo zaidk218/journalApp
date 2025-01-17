@@ -1,6 +1,7 @@
 package com.zaid.journalApp.controller;
 
 import com.zaid.journalApp.entity.User;
+import com.zaid.journalApp.repository.UserCustomRepository;
 import com.zaid.journalApp.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,17 +21,10 @@ public class UserController {
     @Autowired
     private UserService userService;
 
-    // getalluser controller hm nhi bnaayenge ,usko hm admin me bna denge ki agar admin dekhna chahta hai saare user.agar admin dekhna chahta hai saare user toh wo dekh skta hai koi ek particular user saare user nhi dekhega...
-//    @GetMapping
-//    public ResponseEntity<List<User>> getAllUsers(){
-//        List<User> users=userService.getAllUsers();
-//        return ResponseEntity.ok(users);
-//    }
-
-
+    @Autowired
+    private UserCustomRepository userCustomRepository;
 
     //putmapping authenticated  user ke liye rhna chahiye..
-
     @PutMapping
     public ResponseEntity<User> updateUser(@RequestBody User user) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -89,4 +83,5 @@ public class UserController {
             return ResponseEntity.internalServerError().build();
         }
     }
+
 }

@@ -8,6 +8,18 @@ spring:
       uri: mongodb+srv://zaidk9620:zaidk9620@cluster0.pwcln.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
       database: journaldb
       auto-index-creation: true
+  mail:
+      host: smtp.gmail.com
+      port: 587
+      username: zaidk9620@gmail.com
+      password: strf wdzi uqwq wfpz
+      properties:
+        mail:
+          smtp:
+            auth: true
+            starttls:
+              enable: true
+
 logging:
   level:
     org.springframework.security: DEBUG

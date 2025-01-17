@@ -54,8 +54,6 @@ public class JournalController{
         );
     }
 
-
-
     @PostMapping
     public ResponseEntity<Journal> createJournal(@RequestBody Journal journal) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -89,8 +87,6 @@ public class JournalController{
         }
     }
 
-
-
     @PutMapping("/{journalId}")
     public ResponseEntity<Journal> updateJournal(
             @PathVariable ObjectId journalId,
@@ -109,7 +105,6 @@ public class JournalController{
         }
     }
 
-
     @DeleteMapping("/{journalId}")
     public ResponseEntity<Void> deleteJournal(@PathVariable ObjectId journalId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -126,72 +121,3 @@ public class JournalController{
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
